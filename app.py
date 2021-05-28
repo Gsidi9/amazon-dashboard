@@ -19,10 +19,11 @@ import plotly.express as px
 from wordcloud import WordCloud, STOPWORDS
 import matplotlib.pyplot as plt
 
-
+# disables the misconfiguration error message.
 st.set_option('deprecation.showPyplotGlobalUse', False)
 #title of the app
 st.title("Amazon Review Dashboard")
+#sidebar
 st.sidebar.subheader('Sentiment Analysis for Amazon reviews')
 st.sidebar.markdown('This application is a dashboard to analyse the sentiment of Amazon reviews')
 
@@ -35,7 +36,7 @@ def load_data(file):
     return df
 
 uploaded_file = st.sidebar.file_uploader("", type="csv", key='file_uploader')
-
+#reads the uploaded file as a dataframe
 if uploaded_file is not None:
     try:
         df = pd.read_csv(uploaded_file)
@@ -62,7 +63,9 @@ try:
         #setting up the year year
         st.header("Year")
         year = df.year.unique()
+        #shows a dropdown list 
         select = st.selectbox('Select year', df.year.unique())
+        #creating a new dataframe that contains only rows from the select year.
         data = df[df['year']==select]
         
 
@@ -75,13 +78,15 @@ try:
         total = data.month.count()
         st.title(total)
 
-        #Total positive review
+        #total positive review
         st.subheader(' Total Positive Reviews')
+        #selecting rows that are positive
         total = data[data.Class== 'positive'].shape[0]
         st.title(total)
         
-        #Total negative review
+        #total negative review
         st.subheader(' Total Negative Reviews')
+        #selecting rows that are negative
         total = data[data.Class== 'negative'].shape[0]
         st.title(total)
         
@@ -89,9 +94,12 @@ try:
         
     with col3: 
         #Pie chart Graph : display Sentiment
-        sentiment_count = data['Class'].value_counts()
+        sentiment_count = data['Class'].value_counts()#counts the number of classes
+         # order the data by sentiment 
         sentiment_count = pd.DataFrame({'Sentiment': sentiment_count.index, 'Reviews': sentiment_count.values})
+        #creates the figure
         fig = px.pie(sentiment_count, names='Sentiment', values='Reviews', hole=.3, width=50)
+        #display the chart
         st.plotly_chart(fig, use_container_width=True) 
 
 
@@ -104,14 +112,16 @@ try:
         
         #setting up a default function when the searchbar is empty
         if len(choice) > 0:
+            # creating a new datafram that select only the month columns and check if the choices from the multi-select exist on the dataframe.
             choice_data = data[data.month.isin(choice)]
             fig_choice = px.histogram(choice_data, x='month', y='Class', histfunc='count', color='Class',
             facet_col='Class', labels={'Class':'Reviews'})
+            #display the chart
             st.plotly_chart(fig_choice, use_container_width=True)
             
             
     with col4: 
-        #Review table
+        #review table
         st.header('%s  %s Review Table' % (choice, yearSelected))      
         sentiment = st.radio('Sentiment',('positive','negative'))
         data = data[data.month.isin(choice)]
@@ -121,16 +131,23 @@ try:
 
         
     with col5: 
+         #word cloud 
+        #display the selected year
         st.header('%s  %s  Word Frequency' % (choice, yearSelected))
         st.subheader('What are people talking?')
+        #display the chosen sentiment
         st.markdown(' Sentiment: %s ' % (sentiment))
         df = data[data['Class']==sentiment]
-        words = ' '.join(df['reviewText'])
+        words = ' '.join(df['reviewText']) #creates a list of words from the review column
         processed_words = ' '.join([word for word in words.split() if 'http' not in word and not word.startswith('@') and word != 'RT'])
+        #removing special characters  and stopwords
         wordcloud = WordCloud(stopwords=STOPWORDS, background_color='black', width=800, height=800).generate(processed_words)
+        #generates the word cloud as image
         plt.imshow(wordcloud)
+        # removes sticks by creating an empty list
         plt.xticks([])
         plt.yticks([])
+        #display the word cloud
         st.pyplot()
 
 
